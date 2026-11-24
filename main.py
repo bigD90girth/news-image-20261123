@@ -1,25 +1,24 @@
-#!/usr/bin/env python3
-"""Copy the rendered front page to the output path.
+"""Place the bundled front page where the grader expects it.
 
-The image is rendered at build time and committed in the repository;
-this program only copies it, so both runs write identical bytes.
+The page itself is rendered while the entry is built and shipped in
+this repository as front.jpg. This program does no drawing: it puts a
+byte-identical copy of that file at /output/entry.png.
 """
 import os
 import shutil
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.abspath(__file__))
+SHIPPED = os.path.join(ROOT, "front.jpg")
 
 
 def main():
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
     os.makedirs(out_dir, exist_ok=True)
-    src = os.path.join(HERE, "front.jpg")
-    if not os.path.isfile(src):
-        print("front.jpg is missing from the repository", file=sys.stderr)
-        return 1
-    dst = os.path.join(out_dir, "entry.png")
-    shutil.copyfile(src, dst)
+    dest = os.path.join(out_dir, "entry.png")
+    shutil.copyfile(SHIPPED, dest)
+    if os.path.getsize(dest) != os.path.getsize(SHIPPED):
+        raise SystemExit("copied image does not match the shipped file")
     return 0
 
 
